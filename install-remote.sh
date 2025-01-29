@@ -70,7 +70,6 @@ echo "Deployment completed successfully."
 echo -e "\n🔗 Access your services at:"
 echo "-----------------------------------"
 
-SERVICES=$(grep '^[[:space:]]*[^[:space:]]' "$DOCKER_COMPOSE_FILE" | cut -d: -f1)
 
 echo "✅ Control Panel → http://localhost:8099"
 echo "✅ Payments → http://localhost:8049"
