@@ -70,12 +70,13 @@ echo "Deployment completed successfully."
 echo -e "\n🔗 Access your services at:"
 echo "-----------------------------------"
 
-docker-compose ps --services | while read -r service; do
-    PORT_MAPPING=$(docker-compose port "$service" $(docker-compose config | awk "/$service:/{f=1;next} /ports:/{if(f){getline;print \$1;exit}}"))
-    if [[ -n "$PORT_MAPPING" ]]; then
-        LOCAL_PORT=$(echo "$PORT_MAPPING" | awk -F ':' '{print $2}')
-        echo "✅ $service → http://localhost:$LOCAL_PORT"
-    fi
-done
+SERVICES=$(grep '^[[:space:]]*[^[:space:]]' "$DOCKER_COMPOSE_FILE" | cut -d: -f1)
+
+echo "✅ Control Panel → http://localhost:8099"
+echo "✅ Payments → http://localhost:8049"
+echo "✅ Grafana → http://localhost:4000"
+echo "✅ Metabase → http://localhost:3000"
+echo "✅ Prometheus → http://localhost:9090"
+
 
 echo "-----------------------------------"
