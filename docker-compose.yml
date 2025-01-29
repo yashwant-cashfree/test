@@ -1,0 +1,153 @@
+version: "3.7"
+services:
+  controlpanel:
+    image: "cashfreepayments/flowwise-cp-public:1.0.0"
+    restart: always
+    ports:
+      - "8099:8099"
+    networks:
+      - springapimysql-net
+    environment:
+      - payments-plugin.redis.cluster-node-address=redis://redis:6379
+      - payments-plugin.redis.db=0
+      - payments-plugin.database.host=mysqldb
+      - payments-plugin.database.database=mysql
+      - payments-plugin.database.driver=jdbc
+      - payments-plugin.database.port=3306
+      - payments-plugin.database.name=flowwise-vault
+      - payments-plugin.database.username=user
+      - payments-plugin.database.password=password
+      - payments-plugin.database.idle-timeout=600000
+      - payments-plugin.database.max-lifetime=1800000
+      - payments-plugin.database.connection-timeout=10000
+      - payments-plugin.database.validation-timeout=5000
+      - payments-plugin.database.maximum-pool-size=40
+      - payments-plugin.atlas.base-url=http://payments:8049
+    depends_on:
+      - mysqldb
+      - redis
+    links:
+      - redis
+
+    volumes:
+      - .m2:/root/.m2
+  payments:
+    image: "cashfreepayments/flowwise-payments-public:1.0.0"
+    restart: always
+    ports:
+      - "8049:8049"
+    networks:
+      - springapimysql-net
+    environment:
+      - payments-plugin.redis.cluster-node-address=redis://redis:6379
+      - payments-plugin.redis.db=0
+      - payments-plugin.database.host=mysqldb
+      - payments-plugin.database.database=mysql
+      - payments-plugin.database.driver=jdbc
+      - payments-plugin.database.port=3306
+      - payments-plugin.database.name=flowwise-vault
+      - payments-plugin.database.username=user
+      - payments-plugin.database.password=password
+      - payments-plugin.database.idle-timeout=600000
+      - payments-plugin.database.max-lifetime=1800000
+      - payments-plugin.database.connection-timeout=10000
+      - payments-plugin.database.validation-timeout=5000
+      - payments-plugin.database.maximum-pool-size=40
+      - payments-plugin.control-panel.base-url=http://controlpanel:8099
+    depends_on:
+      - mysqldb
+      - redis
+      - controlpanel
+    links:
+      - redis
+
+    volumes:
+      - .m2:/root/.m2
+
+  mysqldb:
+    image: "mysql:8.0"
+    restart: always
+    ports:
+      - "3306:3306"
+    networks:
+      - springapimysql-net
+    environment:
+      MYSQL_DATABASE: flowwise-vault
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: password
+  redis:
+    image: 'bitnami/redis:latest'
+    ports:
+      - "6379:6379"
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    networks:
+      - springapimysql-net
+
+  metabase:
+    image: metabase/metabase:latest
+    container_name: metabase
+    hostname: metabase
+    volumes:
+      - /dev/urandom:/dev/random:ro
+    ports:
+      - 3000:3000
+    environment:
+      MB_DB_TYPE: postgres
+      MB_DB_DBNAME: metabaseappdb
+      MB_DB_PORT: 5432
+      MB_DB_USER: metabase
+      MB_DB_PASS: mysecretpassword
+      MB_DB_HOST: postgres
+    networks:
+      - springapimysql-net
+    healthcheck:
+      test: curl --fail -I http://localhost:3000/api/health || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 5
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    hostname: postgres
+    environment:
+      POSTGRES_USER: metabase
+      POSTGRES_DB: metabaseappdb
+      POSTGRES_PASSWORD: mysecretpassword
+    networks:
+      - springapimysql-net
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    networks:
+      - springapimysql-net
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    ports:
+      - "4000:3000"
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - grafana_data:/var/lib/grafana
+    networks:
+      - springapimysql-net
+    depends_on:
+      - prometheus
+volumes:
+  grafana_data:
+  prometheus_data:
+
+networks:
+  springapimysql-net:

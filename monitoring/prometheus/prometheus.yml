@@ -1,0 +1,8 @@
+scrape_configs:
+  - job_name: 'flowwise-payements-metrics'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 3s
+    static_configs:
+      - targets: ['host.docker.internal:8049','host.docker.internal:8099']
+        labels:
+          application: 'flowwise native payments Application'
