@@ -3,9 +3,9 @@
 set -e  # Exit on any error
 
 # Configuration
-GITHUB_USER="yashwant-cashfree"   # Replace with actual GitHub username
-GITHUB_REPO="test"       # Replace with actual repository name
-BRANCH="main"                 # Change if needed (e.g., "main" or "dev")
+GITHUB_USER="yashwant-cashfree"
+GITHUB_REPO="test"
+BRANCH="main"
 TARGET_DIR="/tmp/deployment"
 ZIP_URL="https://github.com/$GITHUB_USER/$GITHUB_REPO/archive/$BRANCH.zip"
 DOCKER_COMPOSE_FILE="docker-compose.yml"
@@ -65,3 +65,17 @@ echo "Starting services with Docker Compose..."
 docker-compose up -d
 
 echo "Deployment completed successfully."
+
+# Fetch running services and their mapped ports
+echo -e "\n🔗 Access your services at:"
+echo "-----------------------------------"
+
+docker-compose ps --services | while read -r service; do
+    PORT_MAPPING=$(docker-compose port "$service" $(docker-compose config | awk "/$service:/{f=1;next} /ports:/{if(f){getline;print \$1;exit}}"))
+    if [[ -n "$PORT_MAPPING" ]]; then
+        LOCAL_PORT=$(echo "$PORT_MAPPING" | awk -F ':' '{print $2}')
+        echo "✅ $service → http://localhost:$LOCAL_PORT"
+    fi
+done
+
+echo "-----------------------------------"
