@@ -1,7 +1,7 @@
 version: "3.7"
 services:
   controlpanel:
-    image: "cashfreepayments/flowwise-cp-public:1.0.2"
+    image: "cashfreepayments/flowwise-cp-public:checkout"
     restart: always
     ports:
       - "8099:8099"
@@ -32,7 +32,7 @@ services:
     volumes:
       - .m2:/root/.m2
   payments:
-    image: "cashfreepayments/flowwise-payments-public:1.0.2"
+    image: "cashfreepayments/flowwise-payments-public:checkout"
     restart: always
     ports:
       - "8049:8049"
