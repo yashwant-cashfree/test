@@ -136,7 +136,6 @@ echo -e "\n🔗 Access your services at:"
 echo "-----------------------------------"
 
 
-echo "✅ Control Panel → http://localhost:8099"
 echo "✅ Payments → http://localhost:8049"
 echo "✅ Grafana → http://localhost:4000"
 echo "✅ Metabase → http://localhost:3000"
